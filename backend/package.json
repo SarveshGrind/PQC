@@ -1,0 +1,16 @@
+{
+    "name": "pqc-backend",
+    "version": "1.0.0",
+    "description": "Backend orchestrator for PQC Platform",
+    "main": "api/server.js",
+    "scripts": {
+        "start": "node api/server.js"
+    },
+    "dependencies": {
+        "cors": "^2.8.6",
+        "express": "^4.18.2",
+        "jsonwebtoken": "^9.0.0",
+        "pg": "^8.11.0",
+        "redis": "^4.6.7"
+    }
+}

@@ -1,0 +1,67 @@
+{
+  "AnalyzerRequest": {
+    "description": "Request payload sent to the analyzer.",
+    "schema": {
+      "type": "object",
+      "properties": {
+        "repoPath": {
+          "type": "string",
+          "description": "Absolute path to the cloned repository to analyze."
+        },
+        "analyzerVersion": {
+          "type": "string",
+          "description": "Version of the analyzer expected to run."
+        }
+      },
+      "required": ["repoPath", "analyzerVersion"]
+    }
+  },
+  "AnalyzerResponse": {
+    "description": "Response payload returned by the analyzer.",
+    "schema": {
+      "type": "object",
+      "properties": {
+        "analyzerVersion": {
+          "type": "string"
+        },
+        "summary": {
+          "type": "object",
+          "description": "Aggregated risk metrics.",
+          "properties": {
+            "qrs": { "type": "number", "description": "Quantum Risk Score" }
+          }
+        },
+        "findings": {
+          "type": "array",
+          "items": { "$ref": "#/definitions/CryptoFinding" }
+        }
+      },
+      "required": ["analyzerVersion", "summary", "findings"],
+      "definitions": {
+        "CryptoFinding": {
+          "type": "object",
+          "properties": {
+            "filePath": { "type": "string" },
+            "lineNumber": { "type": "integer" },
+            "algorithm": { "type": "string" },
+            "keySize": { "type": "integer" },
+            "exposureLevel": { "type": "string", "enum": ["HIGH", "MEDIUM", "LOW"] },
+            "tainted": { "type": "boolean" },
+            "usageCategory": { "type": "string" },
+            "riskScore": { "type": "number" }
+          },
+          "required": [
+            "filePath",
+            "lineNumber",
+            "algorithm",
+            "keySize",
+            "exposureLevel",
+            "tainted",
+            "usageCategory",
+            "riskScore"
+          ]
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PQC Migration Platform</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <div class="container">
+        <header>
+            <h1>PQC Migration Analyzer</h1>
+            <button id="logout-btn" class="hidden">Logout</button>
+        </header>
+
+        <!-- Login Section -->
+        <section id="login-section">
+            <h2>Authentication Required</h2>
+            <form id="login-form">
+                <input type="text" id="username" placeholder="Username" required>
+                <input type="password" id="password" placeholder="Password" required>
+                <button type="submit">Login</button>
+            </form>
+            <p id="login-error" class="error hidden"></p>
+        </section>
+
+        <!-- Main Dashboard Section -->
+        <section id="dashboard-section" class="hidden">
+            <!-- Submission -->
+            <div class="card">
+                <h2>Submit Repository</h2>
+                <form id="analyze-form">
+                    <input type="url" id="repo-url" placeholder="https://github.com/user/repo" required>
+                    <button type="submit">Start Analysis</button>
+                </form>
+            </div>
+
+            <!-- Status Indicator -->
+            <div id="status-card" class="card hidden">
+                <h2>Analysis Status</h2>
+                <div class="status-indicator">
+                    <span id="job-state" class="badge">PENDING</span>
+                    <p id="job-message">Initializing job...</p>
+                </div>
+            </div>
+
+            <!-- Results Summary -->
+            <div id="results-summary" class="card hidden">
+                <h2>Risk Summary</h2>
+                <div class="summary-grid">
+                    <div class="summary-stat">
+                        <h3>Quantum Risk Score</h3>
+                        <p id="qrs-value" class="score">0.0</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Findings Table -->
+            <div id="findings-table-container" class="card hidden">
+                <h2>Cryptographic Findings</h2>
+                <table id="findings-table">
+                    <thead>
+                        <tr>
+                            <th>File</th>
+                            <th>Line</th>
+                            <th>Algorithm</th>
+                            <th>Key Size</th>
+                            <th>Exposure</th>
+                            <th>Tainted</th>
+                            <th>Risk Score</th>
+                        </tr>
+                    </thead>
+                    <tbody id="findings-body">
+                        <!-- Populated via JS -->
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+
+</html>
