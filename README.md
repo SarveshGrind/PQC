@@ -96,3 +96,39 @@ cd pqc-platform/evaluation
 python3 evaluate.py
 ```
 *Note: You must edit `evaluate.py` to point to actual sandbox repository directories to see meaningful CSV outputs.*
+
+
+## Quick Run
+
+### 1. Make sure PostgreSQL and Redis are running
+
+Start both services before running the project.
+
+---
+
+### 2. Set Environment Variables
+
+```bash
+export PGUSER="your_postgres_user"
+export PGDATABASE="pqcdb"
+export PGHOST="localhost"
+export PGPORT="5432"
+
+Quick run
+
+make sure postgress and redis is turned on
+
+export PGUSER="your_postgres_user"
+export PGDATABASE="pqcdb"
+export PGHOST="localhost"
+export PGPORT="5432"
+
+## Run the Application
+
+### Backend
+
+npm start
+
+Frontend
+
+python3 -m http.server 8000
