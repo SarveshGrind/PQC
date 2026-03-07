@@ -32,11 +32,15 @@ public class TaintAnalyzer {
     // In a real framework this would map to AST Node IDs or Line Numbers
     private final Set<String> taintedSinksFound = new HashSet<>();
 
+    private List<CompilationUnit> cus;
+
     public void analyze(List<CompilationUnit> cus) {
+        this.cus = cus;
         // Phase 1: Identify local sinks, sources, and build the initial parameter taint
         // mappings
         for (CompilationUnit cu : cus) {
-            cu.accept(new TaintSourceVisitor(), null);
+            cu.accept(new TaintSourceVisitor(
+                    cu.getStorage().map(s -> s.getPath().toAbsolutePath().toString()).orElse("Unknown")), null);
         }
 
         // Phase 2: Interprocedural propagation (Fixed-Point Iteration)
@@ -44,41 +48,89 @@ public class TaintAnalyzer {
     }
 
     /**
-     * Checks if a specific finding (identified by file and line) was identified as
+     * Checks if a specific finding (identified by method signature) was identified
+     * as
      * a tainted sink.
-     * Note: In this structural skeleton, we approximate the lookup. A robust
-     * implementation
-     * would use precise AST node tracking.
      */
-    public boolean isTainted(String filePath, int lineNumber) {
-        // For demonstration of the skeleton, we return true if ANY sink in this Phase
-        // was hit.
-        // In full implementation, we match `filePath` and `lineNumber` to the
-        // `taintedSinksFound` records.
-        return !taintedSinksFound.isEmpty();
+    public boolean isTainted(String methodSignature) {
+        return methodSignature != null && taintedSinksFound.contains(methodSignature);
     }
 
     private void propagateTaint() {
         boolean changed = true;
-        int maxIterations = 1000; // Hard limit for termination guarantee
+        int maxIterations = 1000;
         int iterations = 0;
 
         while (changed && iterations < maxIterations) {
             changed = false;
             iterations++;
 
-            // Wait/Notify or Graph traversal would happen here.
-            // For the framework skeleton, we simulate the propagation logic:
-            // 1. Iterate over all methods.
-            // 2. Walk their AST flow-sensitively.
-            // 3. If a call is made to Method B, and we pass a tainted variable as Arg 0,
-            // we add '0' to methodTaintedParams for Method B.
-            // 4. If methodTaintedParams for Method B grows, changed = true.
-            // (Abstracted to maintain constraints: no deep logic yet, just structure)
+            for (CompilationUnit cu : cus) {
+                TaintPropagationVisitor visitor = new TaintPropagationVisitor();
+                cu.accept(visitor, null);
+                if (visitor.hasChanged()) {
+                    changed = true;
+                }
+            }
+        }
+    }
+
+    private class TaintPropagationVisitor extends VoidVisitorAdapter<Void> {
+        private boolean changed = false;
+
+        public boolean hasChanged() {
+            return changed;
+        }
+
+        @Override
+        public void visit(MethodDeclaration md, Void arg) {
+            super.visit(md, arg);
+            String callerSig = ExposureDetector.getSignature(md);
+            // If the caller has any tainted parameters
+            Set<Integer> callerTaintedParams = methodTaintedParams.getOrDefault(callerSig, Collections.emptySet());
+
+            md.findAll(MethodCallExpr.class).forEach(call -> {
+                String calleeName = call.getNameAsString();
+
+                // Track which arguments passed to callee were tainted
+                for (int i = 0; i < call.getArguments().size(); i++) {
+                    Expression argExpr = call.getArgument(i);
+                    boolean isArgTainted = false;
+
+                    if (argExpr.isNameExpr()) {
+                        String varName = argExpr.asNameExpr().getNameAsString();
+                        // simplistic check: if an argument name matches a tainted parameter name of the
+                        // caller
+                        NodeList<Parameter> params = md.getParameters();
+                        for (int pIdx : callerTaintedParams) {
+                            if (pIdx < params.size() && params.get(pIdx).getNameAsString().equals(varName)) {
+                                isArgTainted = true;
+                                break;
+                            }
+                        }
+                    }
+
+                    if (isArgTainted) {
+                        // In a real resolved AST, we'd look up the exact method signature.
+                        // Here we use the approximated name for the structural skeleton.
+                        Set<Integer> calleeTainted = methodTaintedParams.computeIfAbsent(".*\\." + calleeName + "\\(.*",
+                                k -> new HashSet<>());
+                        if (calleeTainted.add(i)) {
+                            changed = true;
+                        }
+                    }
+                }
+            });
         }
     }
 
     private class TaintSourceVisitor extends VoidVisitorAdapter<Void> {
+
+        private final String filePath;
+
+        public TaintSourceVisitor(String filePath) {
+            this.filePath = filePath;
+        }
 
         @Override
         public void visit(MethodDeclaration md, Void arg) {
@@ -114,7 +166,7 @@ public class TaintAnalyzer {
                 if (expr.isMethodCallExpr()) {
                     MethodCallExpr call = expr.asMethodCallExpr();
                     if (call.getNameAsString().equals("getParameter") &&
-                            call.getScope().map(s -> s.toString().equals("request")).orElse(false)) {
+                            call.getScope().map(s -> s.toString().startsWith("req")).orElse(false)) {
 
                         // If assigned to a variable, taint it
                         call.findAncestor(VariableDeclarator.class).ifPresent(vd -> {
@@ -129,9 +181,20 @@ public class TaintAnalyzer {
                     if (isTaintSink(call)) {
                         // Check if any argument passed is tainted
                         for (Expression argExpr : call.getArguments()) {
+                            boolean isArgTainted = false;
                             if (argExpr.isNameExpr()
                                     && localTaintedVars.contains(argExpr.asNameExpr().getNameAsString())) {
-                                taintedSinksFound.add(call.toString()); // Flag as vulnerable
+                                isArgTainted = true;
+                            } else if (argExpr.isMethodCallExpr() && argExpr.asMethodCallExpr().getScope().isPresent()
+                                    && argExpr.asMethodCallExpr().getScope().get().isNameExpr()) {
+                                if (localTaintedVars.contains(
+                                        argExpr.asMethodCallExpr().getScope().get().asNameExpr().getNameAsString())) {
+                                    isArgTainted = true;
+                                }
+                            }
+
+                            if (isArgTainted) {
+                                taintedSinksFound.add(methodSig); // Flag method as vulnerable
                             }
                         }
                     }

@@ -168,6 +168,8 @@ function renderResults(results) {
             <td><span class="badge">${f.exposureLevel}</span></td>
             <td>${f.tainted ? 'Yes' : 'No'}</td>
             <td>${f.riskScore.toFixed(2)}</td>
+            <td>${f.usageType || 'UNKNOWN'}</td>
+            <td><span class="badge" style="background-color: #ffd700; color: #000">${f.recommendedReplacement || 'Unknown'}</span></td>
         `;
         findingsBody.appendChild(row);
     });

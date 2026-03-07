@@ -1,0 +1,19 @@
+{
+  "analyzerVersion": "1.0.0",
+  "summary": {
+    "qrs": 55.55555555555556,
+    "totalFindings": 1,
+    "highRiskCount": 0
+  },
+  "findings": [
+    {
+      "filePath": "/Users/sarveshalegaonkar/coding/Vibe_code/EDI/PQC/test-workspace/TestController.java",
+      "lineNumber": 7,
+      "algorithm": "SHA256withRSA",
+      "exposureLevel": "HIGH",
+      "tainted": false,
+      "usageCategory": "UNKNOWN",
+      "riskScore": 55.55555555555556
+    }
+  ]
+}

@@ -43,7 +43,7 @@ public class BaselineScanner {
 
         // Baseline model treats all findings as uniformly risky without nuance
         double baselineQrs = findings.isEmpty() ? 0.0 : 80.0;
-        RiskSummary summary = new RiskSummary(baselineQrs);
+        RiskSummary summary = new RiskSummary(baselineQrs, findings.size(), findings.size());
 
         return new AnalyzerResponse(ANALYZER_VERSION, summary, findings);
     }
@@ -63,6 +63,8 @@ public class BaselineScanner {
                     fileFindings.add(createBaselineFinding(file.getAbsolutePath(), lineNumber, "RSA"));
                 } else if (upperLine.contains("ECC") || upperLine.contains("ELLIPTIC")) {
                     fileFindings.add(createBaselineFinding(file.getAbsolutePath(), lineNumber, "ECC"));
+                } else if (upperLine.contains("DH") || upperLine.contains("DIFFIE")) {
+                    fileFindings.add(createBaselineFinding(file.getAbsolutePath(), lineNumber, "DH"));
                 }
 
                 lineNumber++;

@@ -2,9 +2,11 @@
 /Users/sarveshalegaonkar/coding/Vibe_code/EDI/PQC/pqc-platform/analyzer/src/main/java/com/pqc/analyzer/cli/Main.java
 /Users/sarveshalegaonkar/coding/Vibe_code/EDI/PQC/pqc-platform/analyzer/src/main/java/com/pqc/analyzer/detection/CryptoDetector.java
 /Users/sarveshalegaonkar/coding/Vibe_code/EDI/PQC/pqc-platform/analyzer/src/main/java/com/pqc/analyzer/exposure/ExposureDetector.java
+/Users/sarveshalegaonkar/coding/Vibe_code/EDI/PQC/pqc-platform/analyzer/src/main/java/com/pqc/analyzer/model/AnalyzerRequest.java
 /Users/sarveshalegaonkar/coding/Vibe_code/EDI/PQC/pqc-platform/analyzer/src/main/java/com/pqc/analyzer/model/AnalyzerResponse.java
 /Users/sarveshalegaonkar/coding/Vibe_code/EDI/PQC/pqc-platform/analyzer/src/main/java/com/pqc/analyzer/model/CryptoFinding.java
 /Users/sarveshalegaonkar/coding/Vibe_code/EDI/PQC/pqc-platform/analyzer/src/main/java/com/pqc/analyzer/model/RiskSummary.java
 /Users/sarveshalegaonkar/coding/Vibe_code/EDI/PQC/pqc-platform/analyzer/src/main/java/com/pqc/analyzer/pipeline/AnalyzerPipeline.java
 /Users/sarveshalegaonkar/coding/Vibe_code/EDI/PQC/pqc-platform/analyzer/src/main/java/com/pqc/analyzer/risk/QuantumRiskModel.java
 /Users/sarveshalegaonkar/coding/Vibe_code/EDI/PQC/pqc-platform/analyzer/src/main/java/com/pqc/analyzer/taint/TaintAnalyzer.java
+/Users/sarveshalegaonkar/coding/Vibe_code/EDI/PQC/pqc-platform/analyzer/src/main/java/com/pqc/analyzer/usage/CryptoUsageAnalyzer.java

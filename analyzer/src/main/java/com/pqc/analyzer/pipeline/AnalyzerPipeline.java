@@ -9,6 +9,7 @@ import com.pqc.analyzer.model.CryptoFinding;
 import com.pqc.analyzer.model.RiskSummary;
 import com.pqc.analyzer.risk.QuantumRiskModel;
 import com.pqc.analyzer.taint.TaintAnalyzer;
+import com.pqc.analyzer.usage.CryptoUsageAnalyzer;
 
 import java.io.File;
 import java.nio.file.Files;
@@ -32,7 +33,10 @@ public class AnalyzerPipeline {
     // 3. Taint Analysis
     private final TaintAnalyzer taintAnalyzer = new TaintAnalyzer();
 
-    // 4. Risk Scoring
+    // 4. Usage Analysis
+    private final CryptoUsageAnalyzer usageAnalyzer = new CryptoUsageAnalyzer();
+
+    // 5. Risk Scoring
     private final QuantumRiskModel riskModel = new QuantumRiskModel();
 
     public AnalyzerResponse run(String repoPath) {
@@ -61,49 +65,76 @@ public class AnalyzerPipeline {
 
         // --- Integration & Phase 4: Risk Scoring ---
         double aggregateRisk = 0.0;
+        int highRiskCount = 0;
 
         for (CryptoFinding finding : initialFindings) {
 
             // Integrate Exposure
-            // To properly link the finding to the AST, we need the method signature.
-            // For the skeleton, we default to "MEDIUM". In full implementation, the
+            // To properly link the finding to the AST, we need the method signature from
             // Detection
-            // phase would attach the method signature to the CryptoFinding object.
-            String exposureLevel = "MEDIUM";
+            String exposureLevel = "LOW";
+            if (finding.methodSignature != null) {
+                exposureLevel = exposureDetector.getExposureLevel(finding.methodSignature);
+            }
+            finding.exposureLevel = exposureLevel;
 
             // Integrate Taint
-            // Check if this specific finding location (file + line) is flagged as a tainted
-            // sink
-            boolean isTainted = taintAnalyzer.isTainted(finding.filePath, finding.lineNumber);
+            boolean isTainted = finding.methodSignature != null && taintAnalyzer.isTainted(finding.methodSignature);
             finding.setTainted(isTainted);
 
             // In a real integration, the usage category would also map from AST context.
-            String usageCategory = "UNKNOWN";
+            finding.usageCategory = "Data in Transit / Data at Rest";
 
-            // Compute Final QRS for this specific finding
-            double findingRisk = riskModel.computeRiskScore(
+            // Step 3 Map PQC Replacement Matcher based on Usage Type
+            if (finding.usageType != null) {
+                switch (finding.usageType) {
+                    case "ENCRYPTION":
+                    case "KEY_EXCHANGE":
+                        finding.recommendedReplacement = "CRYSTALS-Kyber";
+                        break;
+                    case "SIGNATURE":
+                    case "CERTIFICATE_SIGNATURE":
+                        finding.recommendedReplacement = "CRYSTALS-Dilithium";
+                        break;
+                    default:
+                        finding.recommendedReplacement = "Unknown";
+                        break;
+                }
+            } else {
+                finding.recommendedReplacement = "Unknown";
+            }
+
+            // Step 4 Compute Final Risk Score
+            finding.riskScore = riskModel.computeRiskScore(
                     finding.algorithm,
                     finding.keySize,
                     exposureLevel,
-                    usageCategory);
-
-            // If tainted, we artificially amplify the risk score (simulating combined risk)
-            if (isTainted) {
-                findingRisk = Math.min(100.0, findingRisk * 1.5);
+                    isTainted);
+            if (finding.riskScore >= 80.0) {
+                highRiskCount++;
             }
-
-            finding.riskScore = findingRisk;
-            aggregateRisk += findingRisk;
+            aggregateRisk += finding.riskScore;
+            System.err.println("Finding: " + finding.algorithm + " @ " + finding.filePath + ":" + finding.lineNumber
+                    + " -> BaseExp: " + exposureLevel + ", Tainted: " + isTainted + ", Risk: " + finding.riskScore);
         }
 
         // Calculate a simple system-wide Quantum Risk Score (Average)
         double finalSystemQrs = initialFindings.isEmpty() ? 0.0 : (aggregateRisk / initialFindings.size());
-        RiskSummary summary = new RiskSummary(finalSystemQrs);
+        RiskSummary summary = new RiskSummary(finalSystemQrs, initialFindings.size(), highRiskCount);
+
+        System.err.println("Pipeline Integration complete: Total QRS " + finalSystemQrs + ", Total Findings "
+                + initialFindings.size() + ", High Risk " + highRiskCount);
 
         return new AnalyzerResponse(ANALYZER_VERSION, summary, initialFindings);
     }
 
     private List<CompilationUnit> parseAllJavaFiles(String repoPath) {
+        // Configure JavaParser for modern Java 17 features (records, switch
+        // expressions, text blocks, etc.)
+        com.github.javaparser.ParserConfiguration config = new com.github.javaparser.ParserConfiguration()
+                .setLanguageLevel(com.github.javaparser.ParserConfiguration.LanguageLevel.JAVA_17);
+        StaticJavaParser.setConfiguration(config);
+
         List<CompilationUnit> cus = new ArrayList<>();
         try (Stream<Path> paths = Files.walk(Paths.get(repoPath))) {
             List<File> javaFiles = paths.filter(Files::isRegularFile)

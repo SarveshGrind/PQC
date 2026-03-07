@@ -10,4 +10,7 @@ com/pqc/analyzer/detection/CryptoDetector.class
 com/pqc/analyzer/model/AnalyzerResponse.class
 com/pqc/analyzer/exposure/ExposureDetector$GraphBuildingVisitor.class
 com/pqc/analyzer/risk/QuantumRiskModel.class
+com/pqc/analyzer/model/AnalyzerRequest.class
+com/pqc/analyzer/taint/TaintAnalyzer$TaintPropagationVisitor.class
 com/pqc/analyzer/model/RiskSummary.class
+com/pqc/analyzer/usage/CryptoUsageAnalyzer.class

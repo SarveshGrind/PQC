@@ -27,3 +27,28 @@ CREATE TABLE IF NOT EXISTS jobs (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
+
+-- Analysis Jobs table (Required by system audit)
+CREATE TABLE IF NOT EXISTS analysis_jobs (
+    id SERIAL PRIMARY KEY,
+    user_id INTEGER REFERENCES users(id),
+    repo_url TEXT NOT NULL,
+    state job_state DEFAULT 'PENDING',
+    results JSONB,
+    error_message TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Findings table (Required by system audit)
+CREATE TABLE IF NOT EXISTS findings (
+    id SERIAL PRIMARY KEY,
+    job_id INTEGER REFERENCES analysis_jobs(id),
+    file_path TEXT NOT NULL,
+    line_number INTEGER,
+    algorithm VARCHAR(100),
+    key_size INTEGER,
+    exposure VARCHAR(50),
+    tainted BOOLEAN,
+    risk_score NUMERIC(5,2)
+);

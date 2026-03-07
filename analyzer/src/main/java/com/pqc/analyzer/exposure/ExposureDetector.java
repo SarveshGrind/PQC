@@ -47,9 +47,13 @@ public class ExposureDetector {
             changed = false;
             visited.clear();
 
-            for (Map.Entry<String, String> entry : methodExposureMap.entrySet()) {
+            // Create a copy to prevent CME since propagateExposureLevel mutates the map
+            List<Map.Entry<String, String>> currentEntries = new ArrayList<>(methodExposureMap.entrySet());
+
+            for (Map.Entry<String, String> entry : currentEntries) {
                 String caller = entry.getKey();
-                String exposure = entry.getValue();
+                // Fetch the actual current exposure in case it changed in this pass
+                String exposure = methodExposureMap.get(caller);
 
                 if ("HIGH".equals(exposure)) {
                     changed |= propagateExposureLevel(caller, "HIGH", visited);

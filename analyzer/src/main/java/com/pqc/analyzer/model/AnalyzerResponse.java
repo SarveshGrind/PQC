@@ -12,4 +12,8 @@ public class AnalyzerResponse {
         this.summary = summary;
         this.findings = findings;
     }
+
+    public List<CryptoFinding> getFindings() {
+        return findings;
+    }
 }
