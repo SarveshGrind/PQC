@@ -161,15 +161,15 @@ function renderResults(results) {
         const shortPath = f.filePath.split('/').pop();
 
         row.innerHTML = `
-            <td>${shortPath}</td>
+            <td class="break-col">${shortPath}</td>
             <td>${f.lineNumber}</td>
             <td>${f.algorithm}</td>
             <td>${f.keySize || 'Unknown'}</td>
-            <td><span class="badge">${f.exposureLevel}</span></td>
+            <td><span class="badge" style="background-color: #f1f5f9; color: #475569;">${f.exposureLevel}</span></td>
             <td>${f.tainted ? 'Yes' : 'No'}</td>
-            <td>${f.riskScore.toFixed(2)}</td>
+            <td style="font-weight: 600; color: #2563eb;">${f.riskScore.toFixed(2)}</td>
             <td>${f.usageType || 'UNKNOWN'}</td>
-            <td><span class="badge" style="background-color: #ffd700; color: #000">${f.recommendedReplacement || 'Unknown'}</span></td>
+            <td><span class="badge" style="background-color: #ffd700; color: #000; white-space: nowrap;">${f.recommendedReplacement || 'Unknown'}</span></td>
         `;
         findingsBody.appendChild(row);
     });

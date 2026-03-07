@@ -28,6 +28,11 @@ public class CryptoUsageAnalyzer {
                 finding.usageType = "KEY_EXCHANGE";
             } else if (cls.equals("CertificateFactory") || cls.equals("X509Certificate")) {
                 finding.usageType = "CERTIFICATE_SIGNATURE";
+            } else if (cls.equals("KeyFactory") || cls.equals("KeyPairGenerator") || cls.equals("KeyGenerator")
+                    || cls.equals("RSAKeyGenerator")) {
+                finding.usageType = "KEY_GENERATION";
+            } else if (cls.equals("KeyStore")) {
+                finding.usageType = "CERTIFICATE";
             } else {
                 finding.usageType = "UNKNOWN";
             }

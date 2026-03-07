@@ -55,7 +55,7 @@ public class AnalyzerTests {
         CryptoDetector detector = new CryptoDetector();
         List<CryptoFinding> findings = detector.analyzeRepository(tempDir.toString());
         assertEquals(1, findings.size(), "Should detect exactly 1 cryptographic API");
-        assertEquals("SHA256withRSA", findings.get(0).algorithm);
+        assertEquals("RSA", findings.get(0).algorithm);
 
         // Unit Test: Exposure
         CompilationUnit cu = StaticJavaParser.parse(testFile);
@@ -82,9 +82,36 @@ public class AnalyzerTests {
         assertEquals(1, finalFindings.size(), "Should have exactly 1 finding");
 
         CryptoFinding mainFinding = finalFindings.get(0);
-        assertEquals("SHA256withRSA", mainFinding.algorithm, "Algorithm must match");
+        assertEquals("RSA", mainFinding.algorithm, "Algorithm must match");
         assertEquals("HIGH", mainFinding.exposureLevel, "Exposure must be HIGH");
         assertTrue(mainFinding.tainted, "Taint must be true");
         assertTrue(mainFinding.riskScore >= 80.0, "Risk score must be at least 80.0 for RSA+HIGH+Tainted");
+    }
+
+    @Test
+    void testTypeInferenceAndFallbackPQC(@TempDir Path tempDir) throws Exception {
+        String testCode = "import java.security.interfaces.RSAPublicKey;\n" +
+                "class TestTypeInference {\n" +
+                "  public void useKey() {\n" +
+                "      RSAPublicKey key = null;\n" +
+                "  }\n" +
+                "}";
+
+        File testFile = tempDir.resolve("TestTypeInference.java").toFile();
+        Files.writeString(testFile.toPath(), testCode);
+
+        AnalyzerPipeline pipeline = new AnalyzerPipeline();
+        AnalyzerResponse response = pipeline.run(tempDir.toString());
+
+        List<CryptoFinding> findings = response.getFindings();
+        assertEquals(1, findings.size(), "Should detect exactly 1 cryptographic API from type inference");
+
+        CryptoFinding finding = findings.get(0);
+        assertEquals("RSA", finding.algorithm);
+        // "RSAPublicKey" is not explicitly mapped in CryptoUsageAnalyzer, so usageType
+        // becomes UNKNOWN
+        assertEquals("UNKNOWN", finding.usageType);
+        // Fallback should map RSA -> CRYSTALS-Kyber
+        assertEquals("CRYSTALS-Kyber", finding.recommendedReplacement);
     }
 }

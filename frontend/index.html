@@ -5,7 +5,47 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>PQC Migration Platform</title>
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="style.css?v=2">
+    <style>
+        .container {
+            max-width: 1400px !important;
+            width: 95% !important;
+        }
+
+        .table-responsive {
+            width: 100%;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            margin-top: 1.5rem;
+            background: #fff;
+        }
+
+        #findings-table {
+            min-width: 1100px;
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 0 !important;
+        }
+
+        #findings-table th,
+        #findings-table td {
+            padding: 1rem !important;
+            border-bottom: 1px solid #e2e8f0 !important;
+            text-align: left;
+        }
+
+        #findings-table th {
+            white-space: nowrap;
+            background-color: #f8fafc !important;
+        }
+
+        #findings-table td.break-col {
+            word-break: break-all;
+            max-width: 280px;
+        }
+    </style>
 </head>
 
 <body>
@@ -60,29 +100,31 @@
             <!-- Findings Table -->
             <div id="findings-table-container" class="card hidden">
                 <h2>Cryptographic Findings</h2>
-                <table id="findings-table">
-                    <thead>
-                        <tr>
-                            <th>File</th>
-                            <th>Line</th>
-                            <th>Algorithm</th>
-                            <th>Key Size</th>
-                            <th>Exposure</th>
-                            <th>Tainted</th>
-                            <th>Risk Score</th>
-                            <th>Usage Type</th>
-                            <th>Recommended PQC Algorithm</th>
-                        </tr>
-                    </thead>
-                    <tbody id="findings-body">
-                        <!-- Populated via JS -->
-                    </tbody>
-                </table>
+                <div class="table-responsive">
+                    <table id="findings-table">
+                        <thead>
+                            <tr>
+                                <th>File</th>
+                                <th>Line</th>
+                                <th>Algorithm</th>
+                                <th>Key Size</th>
+                                <th>Exposure</th>
+                                <th>Tainted</th>
+                                <th>Risk Score</th>
+                                <th>Usage Type</th>
+                                <th>Recommended PQC Algorithm</th>
+                            </tr>
+                        </thead>
+                        <tbody id="findings-body">
+                            <!-- Populated via JS -->
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </section>
     </div>
 
-    <script src="app.js"></script>
+    <script src="app.js?v=2"></script>
 </body>
 
 </html>

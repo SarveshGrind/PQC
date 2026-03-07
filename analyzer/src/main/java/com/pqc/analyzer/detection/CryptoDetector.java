@@ -28,7 +28,8 @@ public class CryptoDetector {
             "KeyGenerator",
             "KeyAgreement",
             "CertificateFactory",
-            "X509Certificate");
+            "X509Certificate",
+            "KeyStore");
 
     public List<CryptoFinding> analyzeRepository(String repoPath) {
         // Configure JavaParser for modern Java 17 features
@@ -129,6 +130,18 @@ public class CryptoDetector {
                 });
                 findings.add(finding);
             }
+            // Extract RSA key sizes
+            else if (typeName.equals("RSAKeyGenParameterSpec") && n.getArguments().size() > 0
+                    && n.getArgument(0).isIntegerLiteralExpr()) {
+                int ks = n.getArgument(0).asIntegerLiteralExpr().asNumber().intValue();
+                int lineNumber = n.getBegin().map(pos -> pos.line).orElse(-1);
+                CryptoFinding finding = new CryptoFinding(filePath, lineNumber, "RSA", ks);
+                finding.apiClass = typeName;
+                n.findAncestor(com.github.javaparser.ast.body.MethodDeclaration.class).ifPresent(md -> {
+                    finding.methodSignature = com.pqc.analyzer.exposure.ExposureDetector.getSignature(md);
+                });
+                findings.add(finding);
+            }
         }
 
         @Override
@@ -168,13 +181,17 @@ public class CryptoDetector {
                         // Attempt to extract algorithm string if it's a literal
                         if (n.getArguments().size() > 0 && n.getArgument(0).isStringLiteralExpr()) {
                             StringLiteralExpr literal = n.getArgument(0).asStringLiteralExpr();
-                            algorithm = literal.getValue();
+                            String rawAlgo = literal.getValue();
 
-                            // Map generic factory calls appropriately
-                            if (algorithm.equalsIgnoreCase("RSA"))
+                            // Map generic factory calls specifically based on their raw input strings
+                            String upperAlgo = rawAlgo.toUpperCase();
+                            if (upperAlgo.contains("RSA")) {
                                 algorithm = "RSA";
-                            else if (algorithm.equalsIgnoreCase("EC"))
+                            } else if (upperAlgo.contains("EC") || upperAlgo.contains("ECDSA")) {
                                 algorithm = "EC";
+                            } else {
+                                algorithm = rawAlgo; // Fallback to raw string, e.g. "AES", "DES"
+                            }
                         }
 
                         int lineNumber = n.getBegin().map(pos -> pos.line).orElse(-1);

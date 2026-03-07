@@ -142,7 +142,10 @@ public class TaintAnalyzer {
             for (int i = 0; i < parameters.size(); i++) {
                 Parameter p = parameters.get(i);
                 boolean isTaintedSource = p.getAnnotations().stream()
-                        .anyMatch(a -> a.getNameAsString().equals("RequestBody"));
+                        .anyMatch(a -> {
+                            String name = a.getNameAsString();
+                            return name.equals("RequestBody") || name.equals("RequestParam");
+                        });
 
                 if (isTaintedSource) {
                     methodTaintedParams.computeIfAbsent(methodSig, k -> new HashSet<>()).add(i);

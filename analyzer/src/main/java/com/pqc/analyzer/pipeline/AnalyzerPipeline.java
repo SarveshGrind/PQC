@@ -54,16 +54,19 @@ public class AnalyzerPipeline {
         // we keep its external contract intact and run it independently for now.
         List<CryptoFinding> initialFindings = detector.analyzeRepository(repoPath);
 
-        // --- Phase 2: Exposure Classification ---
+        // --- Phase 2: Usage Classification ---
+        usageAnalyzer.analyze(initialFindings);
+
+        // --- Phase 3: Exposure Classification ---
         // Builds the interprocedural call graph to classify structural reachability
         exposureDetector.buildCallGraphAndBaseExposure(cus);
         exposureDetector.propagateExposure();
 
-        // --- Phase 3: Taint Propagation ---
+        // --- Phase 4: Taint Propagation ---
         // Models data flow from sources (@RequestBody) to sinks (Signature.update)
         taintAnalyzer.analyze(cus);
 
-        // --- Integration & Phase 4: Risk Scoring ---
+        // --- Integration & Phase 5: Risk Scoring ---
         double aggregateRisk = 0.0;
         int highRiskCount = 0;
 
@@ -97,11 +100,23 @@ public class AnalyzerPipeline {
                         finding.recommendedReplacement = "CRYSTALS-Dilithium";
                         break;
                     default:
-                        finding.recommendedReplacement = "Unknown";
+                        if ("RSA".equals(finding.algorithm)) {
+                            finding.recommendedReplacement = "CRYSTALS-Kyber";
+                        } else if ("EC".equals(finding.algorithm)) {
+                            finding.recommendedReplacement = "CRYSTALS-Dilithium";
+                        } else {
+                            finding.recommendedReplacement = "Unknown";
+                        }
                         break;
                 }
             } else {
-                finding.recommendedReplacement = "Unknown";
+                if ("RSA".equals(finding.algorithm)) {
+                    finding.recommendedReplacement = "CRYSTALS-Kyber";
+                } else if ("EC".equals(finding.algorithm)) {
+                    finding.recommendedReplacement = "CRYSTALS-Dilithium";
+                } else {
+                    finding.recommendedReplacement = "Unknown";
+                }
             }
 
             // Step 4 Compute Final Risk Score
