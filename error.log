@@ -1,0 +1,4 @@
+CryptoDetector: Scanned 1 Java files.
+CryptoDetector: Detected 1 cryptographic APIs.
+Finding: RSA @ /Users/sarveshalegaonkar/coding/Vibe_code/EDI/PQC/test-repo/TestController.java:14 -> BaseExp: HIGH, Tainted: true, Risk: 100.0
+Pipeline Integration complete: Total QRS 100.0, Total Findings 1, High Risk 1
